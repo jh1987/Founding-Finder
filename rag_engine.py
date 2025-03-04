@@ -11,6 +11,7 @@ import torch
 import sys
 import gc
 import warnings
+import streamlit as st
 from huggingface_hub import hf_hub_download, HfApi, HfFolder, Repository, hf_hub_url
 
 # Suppress warnings
@@ -23,9 +24,14 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 torch.set_grad_enabled(False)  # Disable gradients globally
 if torch.cuda.is_available():
     torch.cuda.empty_cache()  # Clear CUDA cache
-    
-# Load environment variables
-load_dotenv()
+
+# Load environment variables with Streamlit secrets fallback
+if os.path.exists(".env"):
+    load_dotenv()
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+else:
+    OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY")
+
 
 class RAGEngine:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
@@ -46,8 +52,8 @@ class RAGEngine:
             self.funding_data = None
             self.embeddings = None
             
-            # Initialize OpenAI client
-            self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            # Initialize OpenAI client with API key from environment or secrets
+            self.client = OpenAI(api_key=OPENAI_API_KEY)
             
         except Exception as e:
             print(f"Error initializing RAG engine: {str(e)}", file=sys.stderr)
