@@ -11,6 +11,7 @@ import torch
 import sys
 import gc
 import warnings
+from huggingface_hub import hf_hub_download, HfApi, HfFolder, Repository, hf_hub_url
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
@@ -18,6 +19,11 @@ warnings.filterwarnings('ignore')
 # Set tokenizers parallelism to false to avoid warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
+# Configure PyTorch
+torch.set_grad_enabled(False)  # Disable gradients globally
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()  # Clear CUDA cache
+    
 # Load environment variables
 load_dotenv()
 
@@ -25,19 +31,20 @@ class RAGEngine:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
         """Initialize the RAG engine with a sentence transformer model."""
         try:
-            # Force CPU usage to avoid CUDA memory issues
-            self.device = 'cpu'
+            # Set device before model initialization
+            self.device = 'cpu'  # Force CPU usage to avoid CUDA initialization issues
             
-            # Initialize the model with specific device and parameters
+            # Initialize model with device specification
             self.model = SentenceTransformer(model_name, device=self.device)
             
-            # Disable gradient computation for inference
-            torch.set_grad_enabled(False)
+            # Disable gradient computation for all parameters
+            for param in self.model.parameters():
+                param.requires_grad = False
             
+            # Initialize other attributes
             self.index = None
             self.funding_data = None
             self.embeddings = None
-            self.embedding_size = 384  # Default size for all-MiniLM-L6-v2
             
             # Initialize OpenAI client
             self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -120,7 +127,7 @@ class RAGEngine:
                 gc.collect()
             
             # Initialize the HNSW index
-            self.index = hnswlib.Index(space='l2', dim=self.embedding_size)
+            self.index = hnswlib.Index(space='l2', dim=self.model.get_sentence_embedding_dimension())
             self.index.init_index(max_elements=len(self.embeddings), ef_construction=200, M=16)
             self.index.add_items(self.embeddings)
             
