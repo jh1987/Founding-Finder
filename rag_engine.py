@@ -29,8 +29,10 @@ if torch.cuda.is_available():
 if os.path.exists(".env"):
     load_dotenv()
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    HUGGINGFACE_KEY = os.getenv("HUGGINGFACE")
 else:
     OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY")
+    HUGGINGFACE_KEY = st.secrets.get("HUGGINGFACE")
 
 
 class RAGEngine:
@@ -41,7 +43,9 @@ class RAGEngine:
             self.device = 'cpu'  # Force CPU usage to avoid CUDA initialization issues
             
             # Initialize model with device specification
-            self.model = SentenceTransformer(model_name, device=self.device)
+            hf_token = HUGGINGFACE_KEY
+            self.model = SentenceTransformer(model_name, device=self.device, use_auth_token=hf_token)
+            #self.model = SentenceTransformer(model_name, device=self.device)
             
             # Disable gradient computation for all parameters
             for param in self.model.parameters():
