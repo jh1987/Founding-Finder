@@ -63,11 +63,11 @@ def render_quiz():
     
     # Sidebar for data management
     with st.sidebar:
-        st.header("Data Management")
-        if st.button("Refresh Data"):
-            load_or_refresh_data()
+        #st.header("Data Management")
+        #if st.button("Refresh Data"):
+            #load_or_refresh_data()
         
-        st.write("---")
+        #st.write("---")
         st.write("### About")
         st.write("""
         This app uses advanced AI to match your startup with 
