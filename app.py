@@ -67,7 +67,7 @@ def render_quiz():
         #if st.button("Refresh Data"):
             #load_or_refresh_data()
         
-        st.write("---")
+        #st.write("---")
         st.write("### About")
         st.write("""
         This app uses advanced AI to match your startup with 
